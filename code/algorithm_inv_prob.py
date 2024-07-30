@@ -7,7 +7,7 @@ from dataloader_func import rescale_image_range
 ### and returns a tensor of size (n_ch, im_d1, im_d2)
 
 
-def competing_inv_sol(model_A, model_B, r, x_c ,task,device,sig_0=1, sig_L=.01, h0=.01 , beta=.01 , freq=5,seed = None, init_im = None, init_noise_mean=0,max_T=None, fixed_h=False):
+def competing_inv_sol(model_A, model_B, theta, x_c ,task,device,sig_0=1, sig_L=.01, h0=.01 , beta=.01 , freq=5,seed = None, init_im = None, init_noise_mean=0,max_T=None, fixed_h=False):
     
     '''
     @x_c:  M^T.x)
@@ -46,7 +46,7 @@ def competing_inv_sol(model_A, model_B, r, x_c ,task,device,sig_0=1, sig_L=.01, 
     if freq > 0:
         intermed_Ys.append(y.squeeze(0))
         
-    f_y = model_A(y) - (1/r)*model_B(y)
+    f_y = np.cos(theta)*model_A(y) + np.sin(theta)*model_B(y)
 
     
     sigma = torch.norm(f_y)/np.sqrt(N)
@@ -62,7 +62,7 @@ def competing_inv_sol(model_A, model_B, r, x_c ,task,device,sig_0=1, sig_L=.01, 
             h = h0*t/(1+ (h0*(t-1)) )
 
         with torch.no_grad():
-            f_y = model_A(y) - (1/r)*model_B(y)
+            f_y = np.cos(theta)*model_A(y) + np.sin(theta)*model_B(y)
 
         d = f_y - M(M_T(f_y[0])) + ( M(M_T(y[0]))  - M(x_c) )
 
@@ -96,7 +96,7 @@ def competing_inv_sol(model_A, model_B, r, x_c ,task,device,sig_0=1, sig_L=.01, 
     print('-------- final mean ', y.mean().item() )
     print("-------- total number of iterations, " , t,"-------- average time per iteration (s), " , np.round((time.time() - start_time_total)/(t)  ,4) )
 
-    f_y = model_A(y) - (1/r)*model_B(y)
+    f_y = np.cos(theta)*model_A(y) + np.sin(theta)*model_B(y)
     denoised_y = y - f_y    
     intermed_Ys.append(denoised_y.detach().squeeze(0))
     sigma = torch.norm(f_y)/np.sqrt(N)
